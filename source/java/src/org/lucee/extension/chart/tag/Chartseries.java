@@ -23,6 +23,7 @@ import java.awt.Color;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.Tag;
 
+import lucee.loader.engine.CFMLEngine;
 import lucee.loader.engine.CFMLEngineFactory;
 import lucee.loader.util.Util;
 import lucee.runtime.exp.PageException;
@@ -181,13 +182,16 @@ public final class Chartseries extends BodyTagImpl {
 		ChartDataBean data;
 		
 		if(query!=null) {
-			if(Util.isEmpty(itemColumn)) throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException("attribute itemColumn is required for tag cfchartseries when attribute query is defined");
-			if(Util.isEmpty(valueColumn)) throw CFMLEngineFactory.getInstance().getExceptionUtil().createApplicationException("attribute valueColumn is required for tag cfchartseries when attribute query is defined");
-			
+			CFMLEngine engine = CFMLEngineFactory.getInstance();
+			if(Util.isEmpty(itemColumn)) throw engine.getExceptionUtil().createApplicationException("attribute itemColumn is required for tag cfchartseries when attribute query is defined");
+			if(Util.isEmpty(valueColumn)) throw engine.getExceptionUtil().createApplicationException("attribute valueColumn is required for tag cfchartseries when attribute query is defined");
+			Object val;
 			int rowCount = query.getRecordcount();
 			for(int i=1;i<=rowCount;i++) {
 				data=new ChartDataBean();
-				data.setValue(CFMLEngineFactory.getInstance().getCastUtil().toDoubleValue(query.getAt(valueColumn, i, new Double(0))));
+				val = query.getAt(valueColumn, i, new Double(0));
+				double d=val==null || (val instanceof String && Util.isEmpty((String)val))?0d:engine.getCastUtil().toDoubleValue(val);
+				data.setValue(d);
 				data.setItem(pageContext,query.getAt(itemColumn, i, ""));
 				//data.setItem(itemToString(query.getAt(itemColumn, i, "")));
 				addChartData(data);
